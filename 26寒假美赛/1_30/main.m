@@ -1,220 +1,159 @@
-% ============================================================
-% DWTS scores hardcoded from 2026_MCM_Problem_C_Data.csv
-% Column order (44 columns):
-% [W1J1 W1J2 W1J3 W1J4  W2J1 W2J2 W2J3 W2J4  ...  W11J1 W11J2 W11J3 W11J4]
-% N/A -> NaN; 0 remains 0.
-% Each season matrix ends with 5 empty rows (NaN).
-% ============================================================
+clc;close all;clear;
 
-% ===================== Season 1 =====================
-season1_names = {
-    "John O'Hurley"
-    "Kelly Monaco"
-    "Evander Holyfield"
-    "Rachel Hunter"
-    "Joey McIntyre"
-    "Trista Sutter"
-};
+function results = buildDWTSSeasonMatrices(filename)
+    % 读取CSV文件
+    data = readtable(filename);
 
-season1_scores = [
-    7 7 6 NaN, 8 9 9 NaN, 9 8 7 NaN, 7 8 6 NaN, 9 9 9 NaN, 9 9 9 NaN, NaN NaN NaN NaN, NaN NaN NaN NaN, NaN NaN NaN NaN, NaN NaN NaN NaN, NaN NaN NaN NaN;
-    5 4 4 NaN, 5 6 6 NaN, 6 7 8 NaN, 9 9 8 NaN, 8.5 7.5 7.5 NaN, 8.5 9.5 9.5 NaN, NaN NaN NaN NaN, NaN NaN NaN NaN, NaN NaN NaN NaN, NaN NaN NaN NaN, NaN NaN NaN NaN;
-    5 7 6 NaN, 5 4 5 NaN, 5 4 4 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN, NaN NaN NaN NaN, NaN NaN NaN NaN, NaN NaN NaN NaN, NaN NaN NaN NaN;
-    7 6 7 NaN, 8 8 8 NaN, 8 9 9 NaN, 7 9 9 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN, NaN NaN NaN NaN, NaN NaN NaN NaN, NaN NaN NaN NaN, NaN NaN NaN NaN;
-    7 7 6 NaN, 8 7 6 NaN, 7 7 8 NaN, 7 6 7 NaN, 8.5 7 7 NaN, 0 0 0 NaN, NaN NaN NaN NaN, NaN NaN NaN NaN, NaN NaN NaN NaN, NaN NaN NaN NaN, NaN NaN NaN NaN;
-    6 6 6 6, 6 7 6 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN, NaN NaN NaN NaN, NaN NaN NaN NaN, NaN NaN NaN NaN, NaN NaN NaN NaN
-];
-season1_scores = [season1_scores; NaN(5,44)];  % 预留 5 空行
+    % 获取所有赛季
+    seasons = unique(data.season);
 
-% ===================== Season 2 =====================
-season2_names = {
-    "Tatum O'Neal"
-    "Tia Carrere"
-    "George Hamilton"
-    "Lisa Rinna"
-    "Stacy Keibler"
-    "Jerry Rice"
-    "Giselle Fernandez"
-    "Master P"
-    "Drew Lachey"
-    "Kenny Mayne"
-};
+    % 提取所有评分列名
+    score_columns = contains(data.Properties.VariableNames, 'week') & ...
+                   contains(data.Properties.VariableNames, 'score');
+    score_col_names = data.Properties.VariableNames(score_columns);
 
-season2_scores = [
-    7 8 8 NaN, 5 6 6 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN, NaN NaN NaN NaN, NaN NaN NaN NaN;
-    6 7 7 NaN, 7 8 7 NaN, 9 8 9 NaN, 9 8 8 NaN, 7 7 8 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN, NaN NaN NaN NaN, NaN NaN NaN NaN;
-    7 5 6 NaN, 8 7 7 NaN, 7 7 8 NaN, 7 7 7 NaN, 8 8 8 NaN, 8 7 8 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN, NaN NaN NaN NaN, NaN NaN NaN NaN;
-    5 7 7 NaN, 6 7 7 NaN, 8 8 9 NaN, 9 9 8 NaN, 7 9 9 NaN, 9 9 9 NaN, 8.5 9 9 NaN, 0 0 0 NaN, NaN NaN NaN NaN, NaN NaN NaN NaN, NaN NaN NaN NaN;
-    8 6 8 NaN, 9 10 10 NaN, 9 9 9 NaN, 8 9 9 NaN, 10 10 10 NaN, 10 10 10 NaN, 9 9 9.5 NaN, 9.3333 9.6666 9.6666 NaN, NaN NaN NaN NaN, NaN NaN NaN NaN, NaN NaN NaN NaN;
-    7 7 7 NaN, 7 8 8 NaN, 7 6 6 NaN, 8 8 8 NaN, 7 8 8 NaN, 8 7 8 NaN, 7 7 6.5 NaN, 9 9 8.6666 NaN, NaN NaN NaN NaN, NaN NaN NaN NaN, NaN NaN NaN NaN;
-    7 8 8 NaN, 8 8 8 NaN, 7 8 7 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN, NaN NaN NaN NaN, NaN NaN NaN NaN;
-    4 4 4 NaN, 6 5 5 NaN, 6 4 4 NaN, 4 2 2 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN, NaN NaN NaN NaN, NaN NaN NaN NaN;
-    8 8 8 NaN, 9 9 9 NaN, 9 9 9 NaN, 9 9 10 NaN, 9 9 9 NaN, 10 10 10 NaN, 9.5 9 9 NaN, 9.6666 9.6666 9.6666 NaN, NaN NaN NaN NaN, NaN NaN NaN NaN, NaN NaN NaN NaN;
-    4 5 4 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN, NaN NaN NaN NaN, NaN NaN NaN NaN
-];
-season2_scores = [season2_scores; NaN(5,44)];
+    % 存储结果
+    results = struct();
+    results.seasons = seasons;
+    results.season_data = struct();
 
-% ===================== Season 3 =====================
-season3_names = {
-    "Harry Hamlin"
-    "Vivica A. Fox"
-    "Monique Coleman"
-    "Joey Lawrence"
-    "Mario Lopez"
-    "Emmitt Smith"
-    "Shanna Moakler"
-    "Willa Ford"
-    "Sara Evans"
-    "Jerry Springer"
-    "Tucker Carlson"
-};
+    % 为每个赛季创建矩阵
+    for season_num = 1:length(seasons)
+        season = seasons(season_num);
 
-season3_scores = [
-    5 6 6 NaN, 7 7 7 NaN, 7 8 7 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    6 8 8 NaN, 8 8 8 NaN, 9 9 9 NaN, 8 8 8 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    6 6 7 NaN, 9 8 9 NaN, 9 9 9 NaN, 8 8 8 NaN, 9 9 9 NaN, 9 7 7 NaN, 9 9 9 NaN, 8.5 9 9 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    7 7 7 NaN, 10 9 10 NaN, 8 6 8 NaN, 9 9 9 NaN, 8 8 9 NaN, 8 8 8 NaN, 9.5 9 10 NaN, 9.5 8.5 9 NaN, 9.5 10 10 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    9 8 9 NaN, 7 6 8 NaN, 8 6 8 NaN, 10 9 10 NaN, 9 9 9 NaN, 9 9 10 NaN, 9.5 9 9.5 NaN, 9.5 9 10 NaN, 10 9.5 10 NaN, 10 10 9.6666 NaN, NaN NaN NaN NaN;
-    8 8 8 NaN, 8 8 8 NaN, 7 6 6 NaN, 8 8 8 NaN, 9 9 9 NaN, 8 8 9 NaN, 10 9.5 9 NaN, 8.5 9 9.5 NaN, 9.5 10 10 NaN, 10 9.6666 10 NaN, NaN NaN NaN NaN;
-    7 5 6 NaN, 8 7 7 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    7 7 8 NaN, 7 8 8 NaN, 7 7 8 NaN, 9 9 10 NaN, 9 9 9 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    5 5 5 NaN, 7 7 7 NaN, 8 9 8 NaN, 6 7 7 NaN, 8 8 8 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    5 5 6 NaN, 7 6 6 NaN, 7 7 7 NaN, 7 7 8 NaN, 8 8 8 NaN, 7 6 5 NaN, 7.5 8 7.5 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    5 4 3 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN
-];
-season3_scores = [season3_scores; NaN(5,44)];
+        % 筛选当前赛季数据
+        season_data = data(data.season == season, :);
+        names = season_data.celebrity_name;
 
-% ===================== Season 4 =====================
-season4_names = {
-    "John Ratzenberger"
-    "Ian Ziering"
-    "Clyde Drexler"
-    "Laila Ali"
-    "Apolo Anton Ohno"
-    "Shandi Finnessey"
-    "Paulina Porizkova"
-    "Heather Mills"
-    "Billy Ray Cyrus"
-    "Joey Fatone"
-    "Leeza Gibbons"
-};
+        % 确定最大周数和评委数
+        max_week = 0;
+        judges_per_week = containers.Map;
 
-season4_scores = [
-    6 5 6 NaN, 7 7 7 NaN, 7 6 7 NaN, 6 5 5 NaN, 6 6 6 NaN, 7 6 6 NaN, 7.5 7.5 7.5 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    7 7 7 NaN, 7 8 7 NaN, 8 8 8 NaN, 7 9 8 NaN, 8 8 8 NaN, 8 8 8 NaN, 9 9 9 NaN, 8 7.5 8 NaN, 9.5 10 9.5 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    6 5 5 NaN, 6 6 6 NaN, 6 5 5 NaN, 6 4 5 NaN, 4 5 4 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    7 8 8 NaN, 9 9 9 NaN, 7 7 7 NaN, 7 7 7 NaN, 9 10 9 NaN, 9 9 10 NaN, 10 9.5 10 NaN, 9 8.5 9 NaN, 10 10 10 NaN, 9.6666 9 9.6666 NaN, NaN NaN NaN NaN;
-    7 7 7 NaN, 8 9 9 NaN, 7 8 8 NaN, 9 8 9 NaN, 10 10 10 NaN, 9 9 10 NaN, 9 8.5 9.5 NaN, 10 9 10 NaN, 10 9.5 10 NaN, 9.6666 9.6666 10 NaN, NaN NaN NaN NaN;
-    6 6 7 NaN, 6 7 7 NaN, 7 7 7 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    6 6 7 NaN, 7 7 7 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    6 6 6 NaN, 8 8 8 NaN, 8 8 8 NaN, 7 8 8 NaN, 7 7 7 NaN, 7 8 8 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    5 4 4 NaN, 7 7 7 NaN, 7 7 7 NaN, 7 7 7 NaN, 6 6 5 NaN, 7 7 7 NaN, 6 6.5 6.5 NaN, 6.5 6.5 6 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    8 8 8 NaN, 8 8 8 NaN, 8 8 8 NaN, 10 9 9 NaN, 8 8 9 NaN, 9 9 9 NaN, 10 9.5 10 NaN, 9.5 9 9 NaN, 10 10 10 NaN, 9.6666 9.3333 9.6666 NaN, NaN NaN NaN NaN;
-    5 5 5 NaN, 7 7 7 NaN, 8 8 8 NaN, 6 5 5 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN
-];
-season4_scores = [season4_scores; NaN(5,44)];
+        for i = 1:length(score_col_names)
+            col_name = score_col_names{i};
+            tokens = regexp(col_name, 'week(\d+)_judge(\d+)_score', 'tokens');
+            if ~isempty(tokens)
+                week_num = str2double(tokens{1}{1});
+                judge_num = str2double(tokens{1}{2});
 
-% ===================== Season 5 =====================
-season5_names = {
-    "Cameron Mathison"
-    "Jane Seymour"
-    "Sabrina Bryan"
-    "Jennie Garth"
-    "Floyd Mayweather Jr."
-    "Josie Maran"
-    "Albert Reed"
-    "Helio Castroneves"
-    "Mel B"
-    "Wayne Newton"
-    "Marie Osmond"
-    "Mark Cuban"
-};
+                max_week = max(max_week, week_num);
 
-season5_scores = [
-    7 7 7 NaN, 7 7 7 NaN, 8 7 8 NaN, 9 9 9 NaN, 8 9 9 NaN, 9 8 8 NaN, 8.5 8.5 8.5 NaN, 8.5 8.5 8.5 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    8 8 8 NaN, 7 7 7 NaN, 9 9 9 NaN, 8 9 9 NaN, 8 9 9 NaN, 8 7 7 NaN, 8 8.5 8.5 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    9 8 9 NaN, 9 8 9 NaN, 9 9 9 NaN, 10 10 10 NaN, 9 9 10 NaN, 9 8 8 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    7 7 7 NaN, 7 7 7 NaN, 9 8 9 NaN, 8 10 9 NaN, 8 9 8 NaN, 9 9 9 NaN, 8.5 8.5 9.5 NaN, 8.5 8.5 8 NaN, 9.5 10 9.5 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    6 6 6 NaN, 7 7 7 NaN, 7 7 7 NaN, 7 8 8 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    6 5 5 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    7 7 7 NaN, 7 7 7 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    8 9 8 NaN, 9 9 9 NaN, 8 8 8 NaN, 9 9 9 NaN, 8 7 8 NaN, 9 10 9 NaN, 9 8.5 8.5 NaN, 9.5 9.5 9.5 NaN, 10 10 10 NaN, 9 9.3333 9.6666 NaN, NaN NaN NaN NaN;
-    8 8 8 NaN, 7 8 8 NaN, 9 9 9 NaN, 8 9 9 NaN, 10 9 10 NaN, 10 10 10 NaN, 9 9 9 NaN, 9 9.5 9.5 NaN, 10 10 10 NaN, 9.3333 9.3333 9.6666 NaN, NaN NaN NaN NaN;
-    6 7 6 NaN, 5 5 5 NaN, 6 6 6 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    7 7 7 NaN, 8 8 8 NaN, 9 8 9 NaN, 9 9 8 NaN, 7 7 7 NaN, 8 8 7 NaN, 9 8.5 8.5 NaN, 8 8.5 8 NaN, 9.5 9.5 9 NaN, 8 7.5 7.5 NaN, NaN NaN NaN NaN;
-    7 7 7 NaN, 6 6 6 NaN, 6 7 7 NaN, 7 8 7 NaN, 7 7 7 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN
-];
-season5_scores = [season5_scores; NaN(5,44)];
+                week_key = sprintf('week%d', week_num);
+                if isKey(judges_per_week, week_key)
+                    judges_per_week(week_key) = max(judges_per_week(week_key), judge_num);
+                else
+                    judges_per_week(week_key) = judge_num;
+                end
+            end
+        end
 
-% ===================== Season 6 =====================
-season6_names = {
-    "Cristian de la Fuente"
-    "Steve Guttenberg"
-    "Priscilla Presley"
-    "Marlee Matlin"
-    "Shannon Elizabeth"
-    "Marissa Jaret Winokur"
-    "Jason Taylor"
-    "Kristi Yamaguchi"
-    "Monica Seles"
-    "Penn Jillette"
-    "Adam Carolla"
-    "Mario"
-};
+        % 计算总列数
+        total_columns = 0;
+        for week = 1:max_week
+            week_key = sprintf('week%d', week);
+            if isKey(judges_per_week, week_key)
+                total_columns = total_columns + judges_per_week(week_key);
+            end
+        end
 
-season6_scores = [
-    7 7 7 NaN, 7 6 7 NaN, 8 8 9 NaN, 9 8 9 NaN, 7 8 8 NaN, 9 9 9 NaN, 7.5 7.5 8 NaN, 10 9 9.5 NaN, 9.5 9 9.5 NaN, 9 8 9 NaN, NaN NaN NaN NaN;
-    6 6 6 NaN, 6 5 5 NaN, 7 7 7 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    8 8 8 NaN, 7 7 7 NaN, 8 9 9 NaN, 7 7 8 NaN, 7 7 7 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    7 7 8 NaN, 8 8 8 NaN, 7 7 7 NaN, 8 8 8 NaN, 7 7 8 NaN, 7 7 7 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    7 7 7 NaN, 8 8 8 NaN, 8 8 8 NaN, 9 10 9 NaN, 8 8 7 NaN, 8 8 8 NaN, 8.5 8.5 8.5 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    6 6 6 NaN, 7 7 7 NaN, 6 7 6 NaN, 8 8 8 NaN, 8 8 8 NaN, 9 8 9 NaN, 9 8.5 8.5 NaN, 8.5 8 8.5 NaN, 8.5 9 8.5 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    7 8 7 NaN, 9 9 9 NaN, 8 7 8 NaN, 10 9 10 NaN, 9 9 9 NaN, 8 8 8 NaN, 9.5 8.5 9.5 NaN, 9 8 9 NaN, 9 9.5 9 NaN, 9.5 9.5 9.5 NaN, NaN NaN NaN NaN;
-    9 9 9 NaN, 9 9 9 NaN, 9 9 9 NaN, 10 9 10 NaN, 9 10 10 NaN, 10 10 10 NaN, 9.5 8 9.5 NaN, 8.5 9.5 9.5 NaN, 9.5 9 10 NaN, 10 10 10 NaN, NaN NaN NaN NaN;
-    5 5 5 NaN, 5 5 5 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    5 6 5 NaN, 6 6 5 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    5 5 5 NaN, 6 7 6 NaN, 7 7 7 NaN, 6 7 6 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    8 8 8 NaN, 9 8 9 NaN, 7 6 8 NaN, 8 7 9 NaN, 9 9 9 NaN, 9 9 10 NaN, 8.5 8.5 8.5 NaN, 9 8.5 9 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN
-];
-season6_scores = [season6_scores; NaN(5,44)];
+        % 创建得分矩阵
+        n_contestants = height(season_data);
+        score_matrix = zeros(n_contestants, total_columns);
 
-% ===================== Season 7 =====================
-season7_names = {
-    "Ted McGinley"
-    "Cloris Leachman"
-    "Susan Lucci"
-    "Cody Linley"
-};
-%% Season 7
-season7_names = {
-    "Ted McGinley"
-    "Cloris Leachman"
-    "Susan Lucci"
-    "Cody Linley"
-    "Misty May-Treanor"
-    "Maurice Greene"
-    "Warren Sapp"
-    "Jeffrey Ross"
-    "Toni Braxton"
-    "Lance Bass"
-    "Kim Kardashian"
-    "Rocco DiSpirito"
-    "Brooke Burke"
-};
+        % 填充矩阵
+        col_index = 1;
+        for week = 1:max_week
+            week_key = sprintf('week%d', week);
 
-season7_scores = [
-    6 6 6.5 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    6 5 5 NaN, 5 5 5 NaN, 6 5 5 NaN, 8 7 7 NaN, 7 7 7 NaN, 5 5 5 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    6 6 6.5 NaN, 7 7 7 NaN, 7 7 7 NaN, 8 8 8 NaN, 7 7 8 NaN, 8 8 7 NaN, 8 8 8 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    7 6.5 7 NaN, 7 7 7 NaN, 7 7 7 NaN, 7 8 8 NaN, 10 9 9 NaN, 8 8 7 NaN, 8 7 7 NaN, 8 8 8 NaN, 8 7.5 7.5 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    6.5 7.5 7 NaN, 7 7 7 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    6.5 6.5 6.5 NaN, 7 6 6 NaN, 8 8 8 NaN, 6 7 7 NaN, 9 9 9 NaN, 7 7 7 NaN, 8 9 8 NaN, 8 8 8 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    7 7 7.5 NaN, 8 8 8 NaN, 9 8 8 NaN, 8 7 7 NaN, 8 8 9 NaN, 8 9 8 NaN, 7 7 7 NaN, 9.5 8.5 9 NaN, 8.5 8 8 NaN, 9 9.5 9 NaN, NaN NaN NaN NaN;
-    4 4 4 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    7.5 7 8 NaN, 7 8 8 NaN, 8 7 7 NaN, 7 7 8 NaN, 7 7 8 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    7.5 6 8 NaN, 7 6 7 NaN, 8 7 7 NaN, 9 8 9 NaN, 7 7 7 NaN, 9 9 9 NaN, 9 7 9 NaN, 8.5 7.5 9 NaN, 10 9 9.5 NaN, 9 9 9.5 NaN, NaN NaN NaN NaN;
-    6 6.5 6 NaN, 6 6 5 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    6 5.5 6 NaN, 5 6 5 NaN, 7 7 6 NaN, 6 6 6 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, 0 0 0 NaN, NaN NaN NaN NaN;
-    8 8 8.5 NaN, 8 8 8 NaN, 9 10 9 NaN, 9 8 9 NaN, 10 9 10 NaN, 8 10 8 NaN, 10 10 10 NaN, 9.5 8.5 9.5 NaN, 8 8.5 8 NaN, 10 10 10 NaN, NaN NaN NaN NaN
-];
-% ====== 预留空行（未实际添加），用于后续数据处理 ======
+            if isKey(judges_per_week, week_key)
+                n_judges = judges_per_week(week_key);
+
+                for judge = 1:n_judges
+                    col_name = sprintf('week%d_judge%d_score', week, judge);
+
+                    if ismember(col_name, data.Properties.VariableNames)
+                        scores = season_data.(col_name);
+
+                        for i = 1:length(scores)
+                            if isnumeric(scores(i))
+                                score_matrix(i, col_index) = scores(i);
+                            else
+                                score_matrix(i, col_index) = NaN;
+                            end
+                        end
+                    else
+                        score_matrix(:, col_index) = NaN;
+                    end
+
+                    col_index = col_index + 1;
+                end
+            end
+        end
+
+        % 保存结果
+        season_field = sprintf('season%d', season);
+        results.season_data.(season_field).scores = score_matrix;
+        results.season_data.(season_field).names = names;
+        results.season_data.(season_field).max_week = max_week;
+        results.season_data.(season_field).judges_per_week = judges_per_week;
+        results.season_data.(season_field).total_columns = total_columns;
+    end
+end
+
+
+function printDWTSSeason(results, season_to_print)
+    season_field = sprintf('season%d', season_to_print);
+
+    if ~isfield(results.season_data, season_field)
+        fprintf('未找到赛季 %d 的数据。\n', season_to_print);
+        return;
+    end
+
+    season_info = results.season_data.(season_field);
+
+    score_matrix = season_info.scores;
+    names = season_info.names;
+    max_week = season_info.max_week;
+    judges_per_week = season_info.judges_per_week;
+    total_columns = season_info.total_columns;
+    n_contestants = size(score_matrix, 1);
+
+    fprintf('\n===================== 赛季 %d 详细数据 =====================\n', season_to_print);
+    fprintf('选手总数: %d\n', n_contestants);
+    fprintf('周数: %d\n', max_week);
+    fprintf('总评分列数: %d\n\n', total_columns);
+
+    for i = 1:n_contestants
+        fprintf('选手 %d: %s\n', i, names{i});
+        fprintf('得分: ');
+
+        col_idx = 1;
+        for week = 1:max_week
+            week_key = sprintf('week%d', week);
+            if isKey(judges_per_week, week_key)
+                n_judges = judges_per_week(week_key);
+
+                fprintf('第%d周: ', week);
+                for judge = 1:n_judges
+                    score = score_matrix(i, col_idx);
+                    if isnan(score)
+                        fprintf('NaN ');
+                    else
+                        fprintf('%.4f ', score);
+                    end
+                    col_idx = col_idx + 1;
+                end
+                fprintf('| ');
+            end
+        end
+        fprintf('\n\n');
+    end
+
+    fprintf('\n赛季 %d 得分矩阵 (行=选手, 列=周×评委得分):\n', season_to_print);
+    disp(score_matrix);
+    fprintf('\n==========================================================\n\n');
+end
+
+
+results = buildDWTSSeasonMatrices('2026_MCM_Problem_C_Data.csv');
+printDWTSSeason(results, 16);
