@@ -1,8 +1,8 @@
-clc;close all;clear;
+clc; close all; clear;
 
 function results = buildDWTSSeasonMatrices(filename)
     % 读取CSV文件
-    data = readtable(filename);
+    data = readtable(filename, 'VariableNamingRule', 'preserve');
 
     % 获取所有赛季
     seasons = unique(data.season);
@@ -90,6 +90,30 @@ function results = buildDWTSSeasonMatrices(filename)
             end
         end
 
+        % 计算每位选手的赛季平均分
+        avg_scores = zeros(n_contestants, 1);
+        valid_counts = zeros(n_contestants, 1);
+        valid_sums = zeros(n_contestants, 1);
+        
+        for i = 1:n_contestants
+            % 获取选手的所有评分
+            player_scores = score_matrix(i, :);
+            
+            % 找出有效评分（非NaN且大于0）
+            valid_indices = ~isnan(player_scores) & player_scores > 0;
+            valid_scores = player_scores(valid_indices);
+            
+            % 计算有效评分次数、总和和平均分
+            valid_counts(i) = length(valid_scores);
+            valid_sums(i) = sum(valid_scores);
+            
+            if valid_counts(i) > 0
+                avg_scores(i) = valid_sums(i) / valid_counts(i);
+            else
+                avg_scores(i) = NaN; % 没有有效评分
+            end
+        end
+
         % 保存结果
         season_field = sprintf('season%d', season);
         results.season_data.(season_field).scores = score_matrix;
@@ -97,9 +121,52 @@ function results = buildDWTSSeasonMatrices(filename)
         results.season_data.(season_field).max_week = max_week;
         results.season_data.(season_field).judges_per_week = judges_per_week;
         results.season_data.(season_field).total_columns = total_columns;
+        results.season_data.(season_field).avg_scores = avg_scores;
+        results.season_data.(season_field).valid_counts = valid_counts;
+        results.season_data.(season_field).valid_sums = valid_sums;
     end
 end
 
+function saveResultsToExcel(results, filename)
+    % 创建一个表格来存储所有选手的数据
+    all_data_cell = {};
+    
+    for season_num = 1:length(results.seasons)
+        season = results.seasons(season_num);
+        season_field = sprintf('season%d', season);
+        
+        if isfield(results.season_data, season_field)
+            season_info = results.season_data.(season_field);
+            
+            n_contestants = length(season_info.names);
+            
+            % 为当前赛季的每位选手创建一行数据
+            for i = 1:n_contestants
+                row_data = cell(1, 5);
+                row_data{1} = season;
+                row_data{2} = season_info.names{i};
+                row_data{3} = season_info.valid_counts(i);
+                row_data{4} = season_info.valid_sums(i);
+                row_data{5} = season_info.avg_scores(i);
+                
+                % 将行数据添加到总数据中
+                all_data_cell = [all_data_cell; row_data];
+            end
+        end
+    end
+    
+    % 创建表格
+    all_data = cell2table(all_data_cell, 'VariableNames', ...
+        {'season', 'celebrity_name', 'valid_score_count', 'valid_score_sum', 'season_average_score'});
+    
+    % 将结果保存到Excel文件
+    writetable(all_data, filename);
+    fprintf('结果已保存到文件: %s\n', filename);
+    
+    % 显示前几行数据
+    fprintf('\n前10行数据预览:\n');
+    disp(head(all_data, 10));
+end
 
 function printDWTSSeason(results, season_to_print)
     season_field = sprintf('season%d', season_to_print);
@@ -116,6 +183,8 @@ function printDWTSSeason(results, season_to_print)
     max_week = season_info.max_week;
     judges_per_week = season_info.judges_per_week;
     total_columns = season_info.total_columns;
+    avg_scores = season_info.avg_scores;
+    valid_counts = season_info.valid_counts;
     n_contestants = size(score_matrix, 1);
 
     fprintf('\n===================== 赛季 %d 详细数据 =====================\n', season_to_print);
@@ -125,8 +194,9 @@ function printDWTSSeason(results, season_to_print)
 
     for i = 1:n_contestants
         fprintf('选手 %d: %s\n', i, names{i});
-        fprintf('得分: ');
-
+        fprintf('有效评分次数: %d, 赛季平均分: %.4f\n', valid_counts(i), avg_scores(i));
+        
+        fprintf('得分详情: ');
         col_idx = 1;
         for week = 1:max_week
             week_key = sprintf('week%d', week);
@@ -151,9 +221,26 @@ function printDWTSSeason(results, season_to_print)
 
     fprintf('\n赛季 %d 得分矩阵 (行=选手, 列=周×评委得分):\n', season_to_print);
     disp(score_matrix);
+    
+    fprintf('\n赛季 %d 平均分统计:\n', season_to_print);
+    % 使用cell数组创建表格
+    names_cell = names;
+    avg_cell = num2cell(avg_scores);
+    count_cell = num2cell(valid_counts);
+    
+    % 创建表格
+    avg_table = table(names_cell, avg_cell, count_cell, ...
+        'VariableNames', {'Name', 'AverageScore', 'ValidCount'});
+    disp(avg_table);
+    
     fprintf('\n==========================================================\n\n');
 end
 
-
+% 主程序
 results = buildDWTSSeasonMatrices('2026_MCM_Problem_C_Data.csv');
-printDWTSSeason(results, 16);
+
+% 保存结果到Excel
+saveResultsToExcel(results, 'result.xlsx');
+
+% 可选：打印某个赛季的详细信息（例如赛季1）
+printDWTSSeason(results, 1);
